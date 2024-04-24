@@ -1,4 +1,5 @@
 <?php
+    session_start(); // Start session to use session variables
     include "header.php";
     include "connection.php";
 
@@ -15,22 +16,22 @@
         $unitsale = $_POST['unitsale'];
 
         // Input validation: ensure the sold units are greater than 0
-        if($unitsale <= 0) {
-            echo "Sell units must be greater than zero.";
+        if ($unitsale <= 0) {
+            $_SESSION['error'] = "Sell units must be greater than zero.";
         } else {
             $totalprice = $unitprice * $unitsale;
             $u_unit = $unit - $unitsale;
 
             // Check if enough stock is available
-            if($unit >= $unitsale) {
+            if ($unit >= $unitsale) {
                 // Prepared statement for inserting into the sales table
                 $stmt = $conn->prepare("INSERT INTO sales(name, sellunit, totalprice, productid) VALUES (?, ?, ?, ?)");
                 $stmt->bind_param("sidi", $name, $unitsale, $totalprice, $id);
 
                 if ($stmt->execute()) {
-                    echo "Sell successfully";
+                    $_SESSION['success'] = "Sell successfully recorded.";
                 } else {
-                    echo "Error: " . $stmt->error;
+                    $_SESSION['error'] = "Error: " . $stmt->error;
                 }
 
                 // Prepared statement for updating product quantity
@@ -38,15 +39,16 @@
                 $stmt_update->bind_param("ii", $u_unit, $id);
 
                 if ($stmt_update->execute()) {
-                    echo "Update successfully";
+                    $_SESSION['success'] = "Stock updated successfully.";
                 } else {
-                    echo "Error: " . $stmt_update->error;
+                    $_SESSION['error'] = "Error: " . $stmt_update->error;
                 }
 
                 // Redirect after successful sale
                 header('location:sales.php');
+                exit(); // Terminate script after redirection
             } else {
-                echo "Out Of Stock";
+                $_SESSION['error'] = "Out of stock.";
             }
         }
     }
@@ -58,6 +60,20 @@
 <body>
     <div class="container">
         <h5>Sales</h5>
+
+        <!-- Display session alerts -->
+        <?php if(isset($_SESSION['success'])): ?>
+            <div class="alert alert-success">
+                <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if(isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger">
+                <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+            </div>
+        <?php endif; ?>
+
         <table class="table table-striped">
             <thead>
                 <tr>
