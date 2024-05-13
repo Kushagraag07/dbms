@@ -10,15 +10,20 @@ if (isset($_SESSION['auth'])) {
 
 if (isset($_POST['submit'])) {
     $id = strtolower(trim($_POST['id'])); // Make username case-insensitive
-    $pass = $_POST['password'];
+    $pass = trim($_POST['password']);
 
-    // Password should ideally be hashed: password_hash($pass, PASSWORD_DEFAULT)
-    if ($id == 'admin' && $pass == 'admin') {
-        $_SESSION['auth'] = 1;
-        header("location:index.php");
-        exit();
+    // Check if both username and password are provided
+    if (empty($id) || empty($pass)) {
+        $_SESSION['error'] = "Both username and password are required.";
     } else {
-        $_SESSION['error'] = "Invalid username or password.";
+        // Password should ideally be hashed: password_hash($pass, PASSWORD_DEFAULT)
+        if ($id == 'admin' && $pass == 'admin') {
+            $_SESSION['auth'] = 1;
+            header("location:index.php");
+            exit();
+        } else {
+            $_SESSION['error'] = "Invalid username or password.";
+        }
     }
 }
 ?>
